@@ -11,7 +11,6 @@ import numpy.ma as ma
 
 
 storage = h5s.H5Storage( 'simulation.h5' )
-params = storage('simulation_info/settings/params')
 
 a = op.AnalysisContainer()
 dr = ds.DataReader( "simulation", folder='./')
