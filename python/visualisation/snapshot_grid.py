@@ -9,7 +9,6 @@ from scipy import stats
 import time,os,matplotlib
 import numpy.ma as ma
 
-sftor = sf.StructureFactor()
 
 storage = h5s.H5Storage( 'simulation.h5' )
 params = storage('simulation_info/settings/params')
