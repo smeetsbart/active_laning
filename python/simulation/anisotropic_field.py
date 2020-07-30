@@ -14,10 +14,11 @@
 """
 
 #-----------------------------------------------------------------------------------------------------------------------------
-from mpacts.commands.force.body import DirectedForceCommand
-from mpacts.commands.force.body import PersistentRandomForceCommand
-from mpacts.commands.geometry.orientation import RandomWalkInPlaneCommand
-from mpacts.commands.geometry.orientation import ComputeOrientationCommand
+#from mpacts.commands.force.body import DirectedForceCommand
+#from mpacts.commands.force.body import PersistentRandomForceCommand
+from mpacts_usermodules.active_force import PersistentRandomForceCommand
+#from mpacts.commands.geometry.orientation import RandomWalkInPlaneCommand
+#from mpacts.commands.geometry.orientation import ComputeOrientationCommand
 from mpacts.commands.onarrays.linearcombination import LinearCombinationCommand
 import mpacts.commands.monitors.progress as pp
 from mpacts.commands.onarrays.setvalue import SetValueCommand
@@ -26,26 +27,26 @@ from mpacts.commands.time_evolution.integration import ForwardEuler_Generic
 import mpacts.commands.misc.stresscalculation as stress_calculation
 from mpacts.contact.detectors.multigrid import MultiGridContactDetector
 from mpacts.contact.models.collision.contractilerepulsive import ContractileRepulsiveMatrix
-import mpacts.contact.models.misc.binning as tm
+#import mpacts.contact.models.misc.binning as tm
 from mpacts.commands.onarrays.average import ExponentialMovingAverageCommand
-from mpacts.boundaryconditions import periodicboundary1D as pbc
-from mpacts.boundaryconditions import reflectiveboundary1D as rbc
+#from mpacts.boundaryconditions import periodicboundary1D as pbc
+#from mpacts.boundaryconditions import reflectiveboundary1D as rbc
 from mpacts.boundaryconditions import periodicboundary2D as pbc2
 
 from mpacts.contact.matrix.conjugategradient import DefaultConjugateGradientSolver
 from mpacts.contact.matrix.cmtypes import ConjugateGradientSolver_old, ConjugateGradientSolver
 from mpacts.commands.time_evolution.integration import ForwardEuler_UncoupledOverdamped
 from mpacts.core.valueproperties import Variable, VariableFunction
-from mpacts.contact.models.collision.jkr.jkr_matrix import JKRMatrix
-from mpacts.io.vtk_writer import VTKSerialWriter
+#from mpacts.contact.models.collision.jkr.jkr_matrix import JKRMatrix
+#from mpacts.io.vtk_writer import VTKSerialWriter
 import mpacts.geometrygenerators.pointgenerators as pointgen
-import mpacts.geometrygenerators.quadgeometries as quadgen
+#import mpacts.geometrygenerators.quadgeometries as quadgen
 from mpacts.io.datasave import DataSaveCommand
 from mpacts.core.arrays import create_array
 from mpacts.core.baseobject import BaseObject
 from mpacts.core.command import CommandList
 from mpacts.core.simulation import Simulation
-import DEMutilities.enumerate_properties as ep
+#import DEMutilities.enumerate_properties as ep
 import mpacts.tools.random_seed as randseed
 from mpacts.tools.load_parameters import load_parameters
 import DEMutilities.postprocessing.h5storage as h5s
