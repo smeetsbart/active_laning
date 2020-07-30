@@ -14,11 +14,7 @@
 """
 
 #-----------------------------------------------------------------------------------------------------------------------------
-#from mpacts.commands.force.body import DirectedForceCommand
-#from mpacts.commands.force.body import PersistentRandomForceCommand
 from mpacts_usermodules.active_force import PersistentRandomForceCommand
-#from mpacts.commands.geometry.orientation import RandomWalkInPlaneCommand
-#from mpacts.commands.geometry.orientation import ComputeOrientationCommand
 from mpacts.commands.onarrays.linearcombination import LinearCombinationCommand
 import mpacts.commands.monitors.progress as pp
 from mpacts.commands.onarrays.setvalue import SetValueCommand
@@ -27,34 +23,26 @@ from mpacts.commands.time_evolution.integration import ForwardEuler_Generic
 import mpacts.commands.misc.stresscalculation as stress_calculation
 from mpacts.contact.detectors.multigrid import MultiGridContactDetector
 from mpacts.contact.models.collision.contractilerepulsive import ContractileRepulsiveMatrix
-#import mpacts.contact.models.misc.binning as tm
 from mpacts.commands.onarrays.average import ExponentialMovingAverageCommand
-#from mpacts.boundaryconditions import periodicboundary1D as pbc
-#from mpacts.boundaryconditions import reflectiveboundary1D as rbc
 from mpacts.boundaryconditions import periodicboundary2D as pbc2
-
 from mpacts.contact.matrix.conjugategradient import DefaultConjugateGradientSolver
 from mpacts.contact.matrix.cmtypes import ConjugateGradientSolver_old, ConjugateGradientSolver
 from mpacts.commands.time_evolution.integration import ForwardEuler_UncoupledOverdamped
 from mpacts.core.valueproperties import Variable, VariableFunction
-#from mpacts.contact.models.collision.jkr.jkr_matrix import JKRMatrix
-#from mpacts.io.vtk_writer import VTKSerialWriter
 import mpacts.geometrygenerators.pointgenerators as pointgen
-#import mpacts.geometrygenerators.quadgeometries as quadgen
 from mpacts.io.datasave import DataSaveCommand
 from mpacts.core.arrays import create_array
 from mpacts.core.baseobject import BaseObject
 from mpacts.core.command import CommandList
 from mpacts.core.simulation import Simulation
-#import DEMutilities.enumerate_properties as ep
 import mpacts.tools.random_seed as randseed
 from mpacts.tools.load_parameters import load_parameters
 import DEMutilities.postprocessing.h5storage as h5s
 from mpacts.core.new_units import registry as u
 import mpacts.particles as prt
-import os, sys, glob
 import mpacts.core.command as cmd
 import numpy as np
+import os
 
 #-----------------------------------------------------------------------------------------------------------------------------
 #Utility function to compute correct hexagonal packing:
@@ -98,12 +86,12 @@ Y          = Variable("Y"      , params, value=(0,0,1,0,0,0)*u("dimensionless"))
 
 densprop  = Variable( "density"   , params, value = 1.1 * u("dimensionless") )#Cell density
 gamma_n_n = Variable( 'gamma_n_n' , params, value = 0.0 * u("dimensionless") )#Viscosity
-f_a_n     = Variable( 'f_a_n'     , params, value = 3.0 * u("dimensionless") )#Dimensionless rate of cell-substrate adhesion
+f_a_n     = Variable( 'f_a_n'     , params, value = 2.5 * u("dimensionless") )#Dimensionless rate of cell-substrate adhesion
 f_c_n     = Variable( 'f_c_n'     , params, value = 0.01 * u("dimensionless") )#Dimensionless rate of cell-cell adhesion
-Dr_n      = Variable( 'Dr_n'      , params, value = 0.6 * u("dimensionless") )#Rotational diffusivity rate
-f_n       = Variable( "f_n"       , params, value = 3.0 * u('dimensionless'))#Acceleration 'rate' on self-reinforcement of velocity
-height    = Variable( "height"    , params, value = 0.5*9*u('mm'))#height of the strip (y direction)
-width     = Variable( "width"     , params, value = 0.5*900*u('um'))#width of the strip (x direction)
+Dr_n      = Variable( 'Dr_n'      , params, value = 0.45 * u("dimensionless") )#Rotational diffusivity rate
+f_n       = Variable( "f_n"       , params, value = 1.5 * u('dimensionless'))#Acceleration 'rate' on self-reinforcement of velocity
+height    = Variable( "height"    , params, value = 9*u('mm'))#height of the strip (y direction)
+width     = Variable( "width"     , params, value = 900*u('um'))#width of the strip (x direction)
 
 R_cell     = Variable( "R_cell"   , params, value = 10 * u("um"))#Spread out cell size. Sets the units of length
 R_std      = Variable( "R_std"    , params, value = 0.5 * u('um') )#Only to prevent crystal-like effects
