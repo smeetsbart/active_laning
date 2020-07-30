@@ -41,10 +41,13 @@ namespace User
                 //This tells the contactdetector how it should provide memory for the contactstate (ie memory reserved for every contact candidate it finds)
                 this->CS() = boost::intrusive_ptr<DEMeter::CM::ContactStateDescriptorBase>(
                         new DEMeter::CM::ContactStateDescriptor< ContactMatrixStateBase, DEMeter::CM::ContactStateSetter>("", NULL));
-                addProperty( Wa_, "Wa", "Cell-substrate adhesion energy", ET::required );
-                addProperty( Wc_, "Wc", "Contractile energy", ET::required );
-                addProperty( gamma_normal_, "gamma_normal", "Normal friction coefficient (kg/s)", ET::required );
-                addProperty( gamma_tangential_, "gamma_tangential", "Tangential friction coefficient (kg/s)", ET::required );
+                addProperty( Wa_, "Wa", "Cell-substrate adhesion energy", ET::required, ET::Units::newton * ET::Units::meter );
+                addProperty( Wc_, "Wc", "Contractile energy", ET::required, ET::Units::newton * ET::Units::meter );
+
+                addProperty( gamma_normal_, "gamma_normal", "Normal friction coefficient (kg/s)"
+                           , ET::required, ET::Units::newton * ET::Units::second / ET::Units::meter );
+                addProperty( gamma_tangential_, "gamma_tangential", "Tangential friction coefficient (kg/s)"
+                           , ET::required, ET::Units::newton * ET::Units::second / ET::Units::meter );
                 addProperty( allow_dewet_, "allow_dewet", "Must be false, maintained for compatibility", ET::optional, false );
                 addProperty( lambda_, "implicitness", "Choose the semi-implicit integration method. "
                                                       "(0 for explicit Euler, 1 for implicit Euler, 0.5 for Cranck-Nicholson)."
