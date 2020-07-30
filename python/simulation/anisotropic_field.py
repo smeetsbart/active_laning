@@ -30,7 +30,15 @@ def load_user_module( umod_name, alternative, cmdname ):
 
 #-----------------------------------------------------------------------------------------------------------------------
 
-load_user_module( "active_force", "mpacts.commands.force.body", "PersistentRandomForceCommand" )
+
+#The user model will contain the open source code of all (physically relevant) parts of the simulation.
+#These can be separately compiled by any reviewer / collaborator to verify the implementation.
+load_user_module( "active_force"#User module
+                , "mpacts.commands.force.body"#Alternative
+                , "PersistentRandomForceCommand" )
+load_user_module( "contractilerepulsive"#User module
+                , "mpacts.contact.models.collision.contractilerepulsive"#Alternative
+                , "ContractileRepulsiveMatrix")
 
 from mpacts.commands.onarrays.linearcombination import LinearCombinationCommand
 import mpacts.commands.monitors.progress as pp
@@ -39,7 +47,7 @@ from mpacts.commands.onarrays.transfer import CopyArrayCommand
 from mpacts.commands.time_evolution.integration import ForwardEuler_Generic
 import mpacts.commands.misc.stresscalculation as stress_calculation
 from mpacts.contact.detectors.multigrid import MultiGridContactDetector
-from mpacts.contact.models.collision.contractilerepulsive import ContractileRepulsiveMatrix
+
 from mpacts.commands.onarrays.average import ExponentialMovingAverageCommand
 from mpacts.boundaryconditions import periodicboundary2D as pbc2
 from mpacts.contact.matrix.conjugategradient import DefaultConjugateGradientSolver
