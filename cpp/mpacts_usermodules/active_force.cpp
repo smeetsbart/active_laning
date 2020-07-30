@@ -7,14 +7,15 @@
 #include <ArLite/ArrayManager.h>
 #include <ArLite/LoopFunctorCommand.h>
 #include <ArLite/FindAndSetArrayPointer.h>
-#include <ArLite/PredicateBase.h> //Only required for predicates
-#include <DEMeter/ContactModels/ContactModelBase.h> //Only required for contactmodels.
 #include <DEMeter/Sim/Simulation.h>
 #include <PrimitiveTypes/R3.h>
 
 namespace User
 {
-    //-------------------------------------------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------------------------------
+
+    //This the loop functor. This one will actually do the work. LoopFunctorCommand calls this functor for very particle.
     class PersistentRandomForceLoopFunctor : public Ar::ParallelCompatible
     {
     public:
@@ -30,20 +31,25 @@ namespace User
                         , R3::Vector_t &F
                         , const R3::Vector_t &v
                         , R3::Vector_t &Fa ) {
-            //This is an Ornstein Uhlenbeck process or a simple Brownian spring
             R3::Vector_t F_rand = R3::Vector_t(0.,0.,0.);
             vvg_(F_rand);
             Fa += dt_ * ( K_ * v - b_*Fa.squaredNorm()*Fa ) + sqrt( dt_ * D_ ) * F_rand;
             F += Fa;
         }
     };
+
+//----------------------------------------------------------------------------------------------------------------------
+
+ //This is the LoopFunctorCommand that interfaces the module with the Python API. Provides input (parameters)
+ //and accesses the necessary arrays. It puts the command by default under 'body forces' in the simulation tree.
  //=============================================================================
     class PersistentRandomForceCommand : public Ar::LoopFunctorCommand
  //=============================================================================
     {
     public:
         PersistentRandomForceCommand( std::string name, boost::intrusive_ptr<ET::BaseObject> parent = NULL )
-            : Ar::LoopFunctorCommand( Default_Name( "PersistentRandomForceCmd", name ), parent, "loop_cmds/body_force_cmds")
+            : Ar::LoopFunctorCommand( Default_Name( "PersistentRandomForceCmd", name )
+                                    , parent, "loop_cmds/body_force_cmds" )
             , sim_(this)
         {
             addProperty( ftor_.D(), "D_force"
@@ -52,19 +58,14 @@ namespace User
             addProperty( ftor_.K(), "K"
             , "Stiffness coefficient tensor (N/m) that drives the persistence in the direction of the velocity"
             , ET::required, ET::Units::newton / ET::Units::meter ) ;
-//             addProperty( ftor_.mean(), "mean_force"
-//             , "Mean force. The active force is a deviation from this force", ET::optional, R3::Vector_t(0.,0.,0.)) ;
             addProperty( Fa_, "F_active"
             , "Array in which the state of the active force will be stored. "
               "Do not forget to ensure that this array starts with reasonable value (e.g. 0,0,0)"
             , ET::required );
             addProperty( ftor_.b(), "b"
             , "Restoring coefficient of quadratic term."
+            //TODO: Verify the units of b and force a sanity check on them:
             , ET::required/*, ET::Units::second / ET::Units::meter*/ );
-//             addProperty( ftor_.H(), "H"
-//             , "Director"
-//             , ET::required/*, ET::Units::second / ET::Units::meter*/ );
-
         }
 
         virtual void afterInit()
@@ -82,12 +83,16 @@ namespace User
      private:
         ET::TreeRelationship<DEMeter::Simulation> sim_;
         PersistentRandomForceLoopFunctor ftor_;
-//         boost::intrusive_ptr<Ar::Array<R3::Vector_t> > Fc_;
         boost::intrusive_ptr<Ar::Array<R3::Vector_t> > F_;
         boost::intrusive_ptr<Ar::Array<R3::Vector_t> > v_;
         boost::intrusive_ptr<Ar::Array<R3::Vector_t> > Fa_;
     };
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+
+//This generates the python module using Boost Python: The name to load from python will be "PersistentRandomForceCommand"
+
 using namespace boost::python;
 
 BOOST_PYTHON_MODULE(active_force) //IMPORTANT the filename and the module name here should be identical!
@@ -96,3 +101,5 @@ BOOST_PYTHON_MODULE(active_force) //IMPORTANT the filename and the module name h
             , (ET::Command)(ET::BaseObject)
             , "Persistent active force with velocity-alignment, restoring term and random fluctuations.");
 }
+
+//----------------------------------------------------------------------------------------------------------------------
