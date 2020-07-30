@@ -13,8 +13,25 @@
    This script only works in Python 3.
 """
 
-#-----------------------------------------------------------------------------------------------------------------------------
-from mpacts_usermodules.active_force import PersistentRandomForceCommand
+#-----------------------------------------------------------------------------------------------------------------------
+
+#If a user module exists, load this. Otherwise, load the generic specified option from mpacts itself.
+def load_user_module( umod_name, alternative, cmdname ):
+   import importlib
+   try:
+      mod = importlib.import_module( f"mpacts_usermodules.{umod_name}" )
+      cmd = mod.__dict__[cmdname]
+      print(f" - Loading user module: {cmd.__name__}")
+   except ImportError as e:
+      mod = importlib.import_module(f"{alternative}")
+      cmd = mod.__dict__[cmdname]
+      print(f" - Loading generic module: {cmd.__name__}")
+   globals()[cmdname] = cmd
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+load_user_module( "active_force", "mpacts.commands.force.body", "PersistentRandomForceCommand" )
+
 from mpacts.commands.onarrays.linearcombination import LinearCombinationCommand
 import mpacts.commands.monitors.progress as pp
 from mpacts.commands.onarrays.setvalue import SetValueCommand
@@ -56,7 +73,6 @@ def Nxz_from_N( N, aspect_ratio ):
 #Just a short hand to get access to SI values of Variables and VariableFunctions
 def si(variable):
     return variable.get_value().value_SI()
-
 
 #Solver for equation of motion, reasonably chosen based on gamma.
 #For final simulations, probably best to keep one fixed solver!
