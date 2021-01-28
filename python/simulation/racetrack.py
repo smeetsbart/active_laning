@@ -107,6 +107,7 @@ R_inner    = Variable("R_inner", params, value=120*u('um'))
 R_outer    = Variable("R_outer", params, value=250*u("um"))
 L_track    = Variable("L_track", params, value=500*u('um'))
 
+#NOTE that for the racetrack, we obviously will assume no anisotropy, so we keep the value of 'h' to 1.
 h = Variable("h", params, value = 1.0 )
 k_perpf    = VariableFunction("k_perp_factor", params, function='1.0')#set this to 1/$h$ for anisotropic reinforcement
 g_perpf    = VariableFunction("gamma_perp_factor", params, function='$h$' )#set this to $h$ for anisotropic friction
