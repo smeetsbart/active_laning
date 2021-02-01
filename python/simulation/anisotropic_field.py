@@ -100,7 +100,7 @@ params=mysim("params")
 
 storage = h5s.H5Storage(f"{mysim.name()}.h5",openmode='wa')
 
-h = Variable("h", params, value = 2.0 )
+h = Variable("h", params, value = 3.0 )
 k_perpf    = VariableFunction("k_perp_factor", params, function='1.0')#set this to 1/$h$ for anisotropic reinforcement
 g_perpf    = VariableFunction("gamma_perp_factor", params, function='$h$' )#set this to $h$ for anisotropic friction
 
@@ -110,10 +110,10 @@ Y          = Variable("Y"      , params, value=(0,0,1,0,0,0)*u("dimensionless"))
 
 densprop  = Variable( "density"   , params, value = 1.1 * u("dimensionless") )#Cell density
 gamma_n_n = Variable( 'gamma_n_n' , params, value = 0.0 * u("dimensionless") )#Viscosity
-f_a_n     = Variable( 'f_a_n'     , params, value = 2.5 * u("dimensionless") )#Dimensionless rate of cell-substrate adhesion
+f_a_n     = Variable( 'f_a_n'     , params, value = 4.0 * u("dimensionless") )#Dimensionless rate of cell-substrate adhesion
 f_c_n     = Variable( 'f_c_n'     , params, value = 0.01 * u("dimensionless") )#Dimensionless rate of cell-cell adhesion
-Dr_n      = Variable( 'Dr_n'      , params, value = 0.45 * u("dimensionless") )#Rotational diffusivity rate
-f_n       = Variable( "f_n"       , params, value = 1.5 * u('dimensionless'))#Acceleration 'rate' on self-reinforcement of velocity
+Dr_n      = Variable( 'Dr_n'      , params, value = 0.40 * u("dimensionless") )#Rotational diffusivity rate
+f_n       = Variable( "f_n"       , params, value = 0.2 * u('dimensionless') )#Acceleration 'rate' on self-reinforcement of velocity
 height    = Variable( "height"    , params, value = 9*u('mm'))#height of the strip (y direction)
 width     = Variable( "width"     , params, value = 900*u('um'))#width of the strip (x direction)
 
@@ -122,20 +122,19 @@ R_std      = Variable( "R_std"    , params, value = 0.5 * u('um') )#Only to prev
 v_cells    = Variable( "v_cell"   , params, value = 60* u("um/hour"))#Cell speed. Sets the units of time
 xi         = Variable( "xi"       , params, value = 6 * u("Pa*hour/um"))#Just sets the units of force. Taken from Duclos et al SI.
 dt_n       = Variable( "dt_n"     , params, value = 0.02 *u('dimensionless') )
-N_out      = Variable( "N_out"    , params, value = 800 )#Number of output frames
+out_int    = Variable( "out_int"  , params, value = 5.0 * u("min"))
+endtime    = Variable( "endtime"  , params, value = 1.0 * u('day') )
 rng_seed   = Variable( 'rng_seed' , params, value = randseed.produce_random_seed() )
 rhv        = Variable( "rhv"      , params, value = 1e8*u("dimensionless"))
 cg_solver  = Variable( "CG_solver", params, value = "Explicit")#Options: Internal/Eigen/Explicit
 cg_tol     = Variable( 'CG_tol'   , params, value = 1e-4 )
 cd_ue      = Variable( "cd_ue"    , params, value = 10 )#Do contact detection every cd_ue steps
 
-cell_area  = VariableFunction("area"   , params, function='math.pi*$R_cell$**2')
-gamma_s    = VariableFunction("gamma_s", params, function="$xi$*$area$")
-F_cell     = VariableFunction("F_cell" , params, function='$gamma_s$*$v_cell$')
-Wm         = VariableFunction("Wm"     , params, function="2*$F_cell$*$R_cell$")
-tscale     = VariableFunction("tscale" , params, function="2*$R_cell$/$v_cell$")
-endtime    = VariableFunction("endtime"  , params,function='10*$tscale$' )
-
+cell_area  = VariableFunction("area"     , params, function='math.pi*$R_cell$**2')
+gamma_s    = VariableFunction("gamma_s"  , params, function="$xi$*$area$")
+F_cell     = VariableFunction("F_cell"   , params, function='$gamma_s$*$v_cell$')
+Wm         = VariableFunction("Wm"       , params, function="2*$F_cell$*$R_cell$")
+tscale     = VariableFunction("tscale"   , params, function="2*$R_cell$/$v_cell$")
 Dr         = VariableFunction("Dr"     , params, function="$Dr_n$/$tscale$")
 f          = VariableFunction("f"      , params, function="$f_n$/$tscale$")
 f_a        = VariableFunction("f_a"    , params, function="$f_a_n$/$tscale$")
@@ -154,7 +153,6 @@ R0         = VariableFunction("R0"     , params, function="$R_cell$*(2*$Ws$+$Wc$
 gamma_c    = VariableFunction("gamma_c", params, function="$gamma_n_n$*$gamma_s$")
 dt         = VariableFunction("dt"     , params, function='$dt_n$*$tscale$')
 cd_kd      = VariableFunction("cd_kd"  , params, function="3*$v_cell$*$dt$*$cd_ue$")
-out_int    = VariableFunction("out_int", params, function="$endtime$/float($N_out$)")
 alpha_s    = VariableFunction("alpha_s", params, function="2./(2*$out_int$/$dt$+1)")
 
 K          = VariableFunction( "K"    , params, function='$k$*$H$+$k_perp_factor$*$k$*($I$-$H$)')
