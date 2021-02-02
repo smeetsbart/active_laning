@@ -17,7 +17,7 @@ pathlib.Path('./stack').mkdir(parents=True, exist_ok=True)
 #-----------------------------------------------------------------------------------------------------------------------
 
 #Utility function to make sure I always get the SI value of a certain parameter
-def fetch_param( name, settings ):
+def fetch_param( name, settings ) -> float:
    param = settings.f['params'][name]#This is the actual h5 entry of our parameter
    unit = param.attrs['unit'].decode('utf-8')#Actually stored as 'byte' objects
    value = float(np.array(param['data']))#np array conversion is somewhat of a hack
