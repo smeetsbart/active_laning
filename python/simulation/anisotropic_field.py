@@ -16,7 +16,7 @@
 #-----------------------------------------------------------------------------------------------------------------------
 
 #If a user module exists, load this. Otherwise, load the generic specified option from mpacts itself.
-def load_user_module( umod_name, alternative, cmdname ):
+def load_user_module( umod_name, alternative, cmdname ) -> None:
    import importlib
    try:
       mod = importlib.import_module( f"mpacts_usermodules.{umod_name}" )
@@ -73,18 +73,18 @@ import os
 #Utility function to compute correct hexagonal packing:
 #Aspect ratio is defined as width / height
 #N is the number of cells, when the size would be a square of width*width size!
-def Nxz_from_N( N, aspect_ratio ):
+def Nxz_from_N( N, aspect_ratio ) -> tuple:
    Nz = round((1 + (1+(8*N)/(3**0.5))**0.5)/(4.*aspect_ratio))
    Nx = round(3**0.5 * Nz * aspect_ratio)
    return (Nx,Nz)
 
 #Just a short hand to get access to SI values of Variables and VariableFunctions
-def si(variable):
+def si(variable) -> float:
     return variable.get_value().value_SI()
 
 #Solver for equation of motion, reasonably chosen based on gamma.
 #For final simulations, probably best to keep one fixed solver!
-def automatic_solver(params):
+def automatic_solver(params) -> str:
     gamma = si(gamma_n_n)
     if gamma == 0:#No solver needed
         return "Explicit"

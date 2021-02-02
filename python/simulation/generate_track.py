@@ -1,12 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def discrete_circle( R, Nrad, join=False ):
+def discrete_circle( R, Nrad, join=False ) -> tuple:
     theta1 = np.linspace( 0, 2*np.pi, Nrad)
     X,Y = R * np.sin(theta1), R*np.cos(theta1)
     return X[:None if join else -1],Y[:None if join else -1]
 
-def discrete_track(  L, R, N=None, d=None, join=False  ):
+def discrete_track(  L, R, N=None, d=None, join=False  ) -> tuple:
     if N is None and d is None:
        raise ValueError("Please specify either d or N")
     if N is not None and d is not None:
