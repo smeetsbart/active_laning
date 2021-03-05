@@ -21,6 +21,8 @@ vref = 60*um/hr#Reference 'free' velocity.
 height  = 10*mm#Height of the patch
 width   = 2*mm#Width of the patch
 bin_pixel = 52*um#Pixel size of the final image
+Rcell = 10*um
+px_2 = bin_pixel / 2.
 aspect_ratio = height/width
 save_snapshots = False#If true, save a .png for every frame with a picture of x velocity
 
@@ -37,7 +39,7 @@ index = a.GetData("DataFrameIndex")
 ti = a.GetData( 'time')
 time = a.Recorder(ti)
 mask = index <= final_frame
-#mask = index <= 10
+#mask = index <= 5
 x = a.GetData("cells/x")
 x = a.Recorder( x )
 a.loop( dr, mask_function=mask )
@@ -66,16 +68,33 @@ for i in range( 1, len(x)-1):
    yd.append(yi[mask])
 
 #Perfectly symmetric around zero
-xbin = np.r_[-np.arange(0,width/2, bin_pixel)[::-1],np.arange(0,width/2, bin_pixel)[1:]]
-ybin = np.r_[-np.arange(0,height/2,bin_pixel)[::-1],np.arange(0,height/2,bin_pixel)[1:]]
+px4 = px_2/2.
+xbin0 = np.r_[-np.arange(0,width/2-Rcell , bin_pixel)[::-1],np.arange(0,width/2-Rcell, bin_pixel)[1:]]
+ybin0 = np.r_[-np.arange(0,height/2-Rcell, bin_pixel)[::-1],np.arange(0,height/2-Rcell,bin_pixel)[1:]]
+xbin = np.interp( np.arange(2*len(xbin0)-1),2*np.arange(len(xbin0)),xbin0)[:-1]+px4
+ybin = np.interp( np.arange(2*len(ybin0)-1),2*np.arange(len(ybin0)),ybin0)[:-1]+px4
 
 vxs = []
 vys = []
 for i in range( len(vd) ):
-   vx,_,_,Nbix = stats.binned_statistic_2d( xd[i],yd[i],vd[i][:,0],statistic='mean', bins=[xbin,ybin] )
-   vy,_,_,Nbiy = stats.binned_statistic_2d( xd[i],yd[i],vd[i][:,2],statistic='mean', bins=[xbin,ybin] )
-   vxs.append(vx)
-   vys.append(vy)
+   vaxis = []
+   for axi in [0,2]:
+      vx1,_,_,Nbix = stats.binned_statistic_2d( xd[i],yd[i],vd[i][:,axi],statistic='mean', bins=[xbin0-px4,ybin0-px4] )
+      vx2,_,_,Nbix = stats.binned_statistic_2d( xd[i],yd[i],vd[i][:,axi],statistic='mean', bins=[xbin0-px4,ybin0+px4] )
+      vx3,_,_,Nbix = stats.binned_statistic_2d( xd[i],yd[i],vd[i][:,axi],statistic='mean', bins=[xbin0+px4,ybin0-px4] )
+      vx4,_,_,Nbix = stats.binned_statistic_2d( xd[i],yd[i],vd[i][:,axi],statistic='mean', bins=[xbin0+px4,ybin0+px4] )
+
+      vx1 = np.repeat(np.repeat(vx1, 2, axis=0), 2, axis=1)[1: ,1: ]
+      vx2 = np.repeat(np.repeat(vx2, 2, axis=0), 2, axis=1)[1: ,:-1]
+      vx3 = np.repeat(np.repeat(vx3, 2, axis=0), 2, axis=1)[:-1, 1:]
+      vx4 = np.repeat(np.repeat(vx4, 2, axis=0), 2, axis=1)[:-1,:-1]
+
+      #We use nanmean, to not propagate nans in the entire field when one of them was empty
+      vx = np.nanmean( [ vx1,vx2,vx3,vx4 ],axis=0 )
+      vaxis.append(vx)
+
+   vxs.append(vaxis[0])
+   vys.append(vaxis[1])
 
 vxs = np.array(vxs)
 vys = np.array(vys)
@@ -86,7 +105,8 @@ mdic.update( {el.split('/')[-1]:params[el] for el in params} )
 savemat( f"binned_v_{simname}.mat", mdic )
 
 if save_snapshots:
-   fig=plt.figure(figsize=(2.0,aspect_ratio*2.0))
+   fs = 2.
+   fig=plt.figure(figsize=(fs,aspect_ratio*fs))
    ax=fig.add_subplot(111)
 
    for i in range(len(vxs)):
@@ -107,5 +127,6 @@ if save_snapshots:
       plt.tight_layout()
       filename = f'frame-{(i+1):04d}.png'
       print(f"Saving snapshot {filename}")
-      plt.savefig(filename, dpi=300)
+      plt.savefig(filename, dpi=int( np.shape(vxs)[0]/fs ))
+      os.system(f"convert -trim {filename} {filename}")
       ax.clear()
