@@ -100,7 +100,7 @@ params=mysim("params")
 
 storage = h5s.H5Storage(f"{mysim.name()}.h5",openmode='wa')
 
-h = Variable("h", params, value = 3.0 )
+h = Variable("h", params, value = 1.0 )
 k_perpf    = VariableFunction("k_perp_factor", params, function='1.0')#set this to 1/$h$ for anisotropic reinforcement
 g_perpf    = VariableFunction("gamma_perp_factor", params, function='$h$' )#set this to $h$ for anisotropic friction
 
@@ -111,11 +111,11 @@ Y          = Variable("Y"      , params, value=(0,0,1,0,0,0)*u("dimensionless"))
 densprop  = Variable( "density"   , params, value = 1.1 * u("dimensionless") )#Cell density
 gamma_n_n = Variable( 'gamma_n_n' , params, value = 0.0 * u("dimensionless") )#Viscosity
 f_a_n     = Variable( 'f_a_n'     , params, value = 4.0 * u("dimensionless") )#Dimensionless rate of cell-substrate adhesion
-f_c_n     = Variable( 'f_c_n'     , params, value = 0.01 * u("dimensionless") )#Dimensionless rate of cell-cell adhesion
+f_c_n     = Variable( 'f_c_n'     , params, value = 0.1 * u("dimensionless") )#Dimensionless rate of cell-cell adhesion
 Dr_n      = Variable( 'Dr_n'      , params, value = 0.40 * u("dimensionless") )#Rotational diffusivity rate
 f_n       = Variable( "f_n"       , params, value = 0.2 * u('dimensionless') )#Acceleration 'rate' on self-reinforcement of velocity
-height    = Variable( "height"    , params, value = 9*u('mm'))#height of the strip (y direction)
-width     = Variable( "width"     , params, value = 900*u('um'))#width of the strip (x direction)
+height    = Variable( "height"    , params, value = 10.0*u('mm'))#height of the strip (y direction)
+width     = Variable( "width"     , params, value = 2.0*u('mm'))#width of the strip (x direction)
 
 R_cell     = Variable( "R_cell"   , params, value = 10 * u("um"))#Spread out cell size. Sets the units of length
 R_std      = Variable( "R_std"    , params, value = 0.5 * u('um') )#Only to prevent crystal-like effects
@@ -123,7 +123,7 @@ v_cells    = Variable( "v_cell"   , params, value = 60* u("um/hour"))#Cell speed
 xi         = Variable( "xi"       , params, value = 6 * u("Pa*hour/um"))#Just sets the units of force. Taken from Duclos et al SI.
 dt_n       = Variable( "dt_n"     , params, value = 0.02 *u('dimensionless') )
 out_int    = Variable( "out_int"  , params, value = 5.0 * u("min"))
-endtime    = Variable( "endtime"  , params, value = 1.0 * u('day') )
+endtime    = Variable( "endtime"  , params, value = 50.0 * u('hour') )
 rng_seed   = Variable( 'rng_seed' , params, value = randseed.produce_random_seed() )
 rhv        = Variable( "rhv"      , params, value = 1e8*u("dimensionless"))
 cg_solver  = Variable( "CG_solver", params, value = "Explicit")#Options: Internal/Eigen/Explicit
@@ -269,15 +269,14 @@ else:
               , "Internal" : ConjugateGradientSolver_old }
     ConjugateGradient = DefaultConjugateGradientSolver( mysim, tolerance=cg_tol, reset_x=False, F_fric = "Ff"
                                                       , CG_solver = solvers[cg_solver.get_value()])
+    #time integration
+    ForwardEuler_Generic( "integrate_v_cells", mysim, pc = cells, x=cells["x"], dx=cells["v"])
 
 #This prevents that fast velocity oscillations cause strong flicker when looking at v in sparse phases (dilute
 ExponentialMovingAverageCommand("AverageVelocityCommand", mysim("loop_cmds/post_contact_cmds")
                                , array = cells["v"]
                                , result = cells["v_average"]
                                , alpha=alpha_s )
-
-#time integration
-ForwardEuler_Generic( "integrate_v_cells", mysim, pc = cells, x=cells["x"], dx=cells["v"])
 
 #Add a command that prints some information to the screen at a certain time interval, so we know what the simulation is doing:
 printer_list = [ pp.DefaultProgressPrinter(mysim, sim_time_unit='h') ]

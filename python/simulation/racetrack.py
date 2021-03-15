@@ -331,14 +331,14 @@ else:
     ConjugateGradient = DefaultConjugateGradientSolver( mysim, tolerance=cg_tol, reset_x=False, F_fric = "Ff"
                                                       , CG_solver = solvers[cg_solver.get_value()])
 
+    #time integration
+    ForwardEuler_Generic( "integrate_v_cells", mysim, pc = cells, x=cells["x"], dx=cells["v"])
+
 #This prevents that fast velocity oscillations cause strong flicker when looking at v in sparse phases (dilute
 ExponentialMovingAverageCommand("AverageVelocityCommand", mysim("loop_cmds/post_contact_cmds")
                                , array = cells["v"]
                                , result = cells["v_average"]
                                , alpha=alpha_s )
-
-#time integration
-ForwardEuler_Generic( "integrate_v_cells", mysim, pc = cells, x=cells["x"], dx=cells["v"])
 
 #Add a command that prints some information to the screen at a certain time interval, so we know what the simulation is doing:
 printer_list = [ pp.DefaultProgressPrinter(mysim, sim_time_unit='h') ]
