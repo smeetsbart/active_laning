@@ -33,7 +33,7 @@ namespace User
                         , R3::Vector_t &Fa ) {
             R3::Vector_t F_rand = R3::Vector_t(0.,0.,0.);
             vvg_(F_rand);
-            Fa += dt_ * ( K_ * v - b_*Fa.squaredNorm()*Fa ) + sqrt( dt_ * D_ ) * F_rand;
+            Fa += dt_ * ( K_ * v - b_*Fa.squaredNorm()*Fa ) + sqrt( 2.0 * dt_ * D_ ) * F_rand;
             F += Fa;
         }
     };
