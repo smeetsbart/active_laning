@@ -9,7 +9,7 @@ import pathlib
 import time, os
 import numpy as np
 #pixel size needed: 1px=3.25um
-#FOV size:2 000 X 10 000 
+#FOV size:2 000 X 10 000
 #-----------------------------------------------------------------------------------------------------------------------
 
 #We save the frames in a new directory 'stack', which we create if it does not exist yet

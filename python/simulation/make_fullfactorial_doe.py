@@ -12,12 +12,11 @@ section = f.data_section( "doe", overwrite=False)
 
 sampler = doe.FullFactorialDesign( section )
 
-sampler.add_parameter("params/h" , doe.ValueList( np.linspace( 1.0,3.0, 5 ) ) )
-sampler.add_parameter("params/f_n", doe.ValueList( np.linspace( 0.15,3.,5 ) ) )
+sampler.add_parameter("params/k_n"  , doe.ValueList( [ 1.,2.,3.,4.,5.,6.,7.] ) )
+sampler.add_parameter("params/h"    , doe.ValueList( [ 1.0, 2.0, 3.0, 4.0 ] ) )
 
 #Three random repeats for EACH case
 sampler.add_full_repeat( "params/rng_seed", doe.ValueList(range( 3 )), unit='-', axis_label='sample' )
-
 sample_section = sampler.generate()
 
 ms.generate_layout( sample_section )

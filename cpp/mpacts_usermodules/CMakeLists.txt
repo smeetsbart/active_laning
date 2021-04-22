@@ -3,6 +3,9 @@
 # copyright 2020 DEM-Research Group #
 #####################################
 
+
+  project(laning)
+
   #This just checks your Cmake version 2.8 because of copy statement
   #in case of trouble 2.6 is ok if copy is omitted or replaced.
   cmake_minimum_required (VERSION 2.8)

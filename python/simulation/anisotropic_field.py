@@ -36,9 +36,6 @@ def load_user_module( umod_name, alternative, cmdname ) -> None:
 load_user_module( "active_force"#User module
                 , "mpacts.commands.force.body"#Alternative
                 , "PersistentRandomForceCommand" )
-load_user_module( "contractilerepulsive"#User module
-                , "mpacts.contact.models.collision.contractilerepulsive"#Alternative
-                , "ContractileRepulsiveMatrix")
 
 from mpacts.commands.onarrays.linearcombination import LinearCombinationCommand
 import mpacts.commands.monitors.progress as pp
@@ -48,6 +45,7 @@ from mpacts.commands.time_evolution.integration import ForwardEuler_Generic
 import mpacts.commands.misc.stresscalculation as stress_calculation
 from mpacts.contact.detectors.multigrid import MultiGridContactDetector
 
+from mpacts.contact.models.collision.linearforce.linearforce_matrix import LinearOffsetForceMatrix
 from mpacts.commands.onarrays.average import ExponentialMovingAverageCommand
 from mpacts.boundaryconditions import periodicboundary2D as pbc2
 from mpacts.contact.matrix.conjugategradient import DefaultConjugateGradientSolver
@@ -80,7 +78,11 @@ def Nxz_from_N( N, aspect_ratio ) -> tuple:
 
 #Just a short hand to get access to SI values of Variables and VariableFunctions
 def si(variable) -> float:
-    return variable.get_value().value_SI()
+    v = variable.get_value()
+    if isinstance( v, float):
+       return v
+    else:
+       return v.value_SI()
 
 #Solver for equation of motion, reasonably chosen based on gamma.
 #For final simulations, probably best to keep one fixed solver!
@@ -104,59 +106,50 @@ h = Variable("h", params, value = 1.0 )
 k_perpf    = VariableFunction("k_perp_factor", params, function='1.0')#set this to 1/$h$ for anisotropic reinforcement
 g_perpf    = VariableFunction("gamma_perp_factor", params, function='$h$' )#set this to $h$ for anisotropic friction
 
-H          = Variable("H"      , params, value=(1,0,0,0,0,0)*u('dimensionless'))
-I          = Variable("I"      , params, value=(1,0,1,0,0,1)*u('dimensionless'))
-Y          = Variable("Y"      , params, value=(0,0,1,0,0,0)*u("dimensionless"))
+H = Variable("H"      , params, value=(1,0,0,0,0,0) * u('dimensionless') )
+I = Variable("I"      , params, value=(1,0,1,0,0,1) * u('dimensionless') )
+Y = Variable("Y"      , params, value=(0,0,1,0,0,0) * u("dimensionless") )
 
-densprop  = Variable( "density"   , params, value = 1.1 * u("dimensionless") )#Cell density
+densprop  = Variable( "density"   , params, value = 1.2 * u("dimensionless") )#Cell density
 gamma_n_n = Variable( 'gamma_n_n' , params, value = 0.0 * u("dimensionless") )#Viscosity
-f_a_n     = Variable( 'f_a_n'     , params, value = 4.0 * u("dimensionless") )#Dimensionless rate of cell-substrate adhesion
-f_c_n     = Variable( 'f_c_n'     , params, value = 0.1 * u("dimensionless") )#Dimensionless rate of cell-cell adhesion
-Dr_n      = Variable( 'Dr_n'      , params, value = 0.40 * u("dimensionless") )#Rotational diffusivity rate
-f_n       = Variable( "f_n"       , params, value = 0.2 * u('dimensionless') )#Acceleration 'rate' on self-reinforcement of velocity
-height    = Variable( "height"    , params, value = 10.0*u('mm'))#height of the strip (y direction)
-width     = Variable( "width"     , params, value = 2.0*u('mm'))#width of the strip (x direction)
+f_n       = Variable( "f_n"       , params, value = 4.5 * u("dimensionless") )#Self-reinforcement rate (1/reinforcement time)
+w_n       = Variable( "w_n"       , params, value = 0.0 * u("dimensionless") )#Dimensionless adhesion
+k_n       = Variable( "k_n"       , params, value = 2.5 * u("dimensionless") )#Dimensionless repulsion
+height    = Variable( "height"    , params, value = 6.0 * u('mm'))#height of the strip (y direction)
+width     = Variable( "width"     , params, value = 1.0 * u('mm'))#width of the strip (x direction)
 
 R_cell     = Variable( "R_cell"   , params, value = 10 * u("um"))#Spread out cell size. Sets the units of length
 R_std      = Variable( "R_std"    , params, value = 0.5 * u('um') )#Only to prevent crystal-like effects
-v_cells    = Variable( "v_cell"   , params, value = 60* u("um/hour"))#Cell speed. Sets the units of time
+v0         = Variable( "v0"       , params, value = 100 * u("um/hour"))#Cell speed.
+Dr         = Variable( "Dr"       , params, value = 2.0 * u("1/hour"))#Effective rotational diffusivity (at F_cell force)
 xi         = Variable( "xi"       , params, value = 6 * u("Pa*hour/um"))#Just sets the units of force. Taken from Duclos et al SI.
-dt_n       = Variable( "dt_n"     , params, value = 0.02 *u('dimensionless') )
+dt_n       = Variable( "dt_n"     , params, value = 0.015 * u('dimensionless') )
 out_int    = Variable( "out_int"  , params, value = 5.0 * u("min"))
-endtime    = Variable( "endtime"  , params, value = 50.0 * u('hour') )
+endtime    = Variable( "endtime"  , params, value = 30.0 * u('hour') )
 rng_seed   = Variable( 'rng_seed' , params, value = randseed.produce_random_seed() )
-rhv        = Variable( "rhv"      , params, value = 1e8*u("dimensionless"))
+rhv        = Variable( "rhv"      , params, value = 1e8 * u("dimensionless"))
 cg_solver  = Variable( "CG_solver", params, value = "Explicit")#Options: Internal/Eigen/Explicit
 cg_tol     = Variable( 'CG_tol'   , params, value = 1e-4 )
 cd_ue      = Variable( "cd_ue"    , params, value = 10 )#Do contact detection every cd_ue steps
 
 cell_area  = VariableFunction("area"     , params, function='math.pi*$R_cell$**2')
 gamma_s    = VariableFunction("gamma_s"  , params, function="$xi$*$area$")
-F_cell     = VariableFunction("F_cell"   , params, function='$gamma_s$*$v_cell$')
-Wm         = VariableFunction("Wm"       , params, function="2*$F_cell$*$R_cell$")
-tscale     = VariableFunction("tscale"   , params, function="2*$R_cell$/$v_cell$")
-Dr         = VariableFunction("Dr"     , params, function="$Dr_n$/$tscale$")
-f          = VariableFunction("f"      , params, function="$f_n$/$tscale$")
-f_a        = VariableFunction("f_a"    , params, function="$f_a_n$/$tscale$")
-f_c        = VariableFunction("f_c"    , params, function="$f_c_n$/$tscale$")
+kc         = VariableFunction("kc"       , params, function='$k_n$*$gamma_s$*$v0$/$R_cell$')
+F_cell     = VariableFunction("F_cell"   , params, function='$gamma_s$*$v0$')
+tscale     = VariableFunction("tscale"   , params, function="$R_cell$/$v0$")#Velocity determines the timescale
+D          = VariableFunction("D"        , params, function='$F_cell$**2*$Dr$')#Force diffusivity
+k          = VariableFunction("a"        , params, function='$f_n$*$D$/$F_cell$**2')
+a          = VariableFunction("k"        , params, function='$a$*$gamma_s$')
+b          = VariableFunction("b"        , params, function='($a$ + $Dr$)/$F_cell$**2')
+fw         = VariableFunction("fw"       , params, function='-$kc$*$w_n$*$R_cell$')#Adhesive force. Negative!
+R0         = VariableFunction("R0"       , params, function='2*$R_cell$ - $fw$/$kc$')
+gamma_c    = VariableFunction("gamma_c"  , params, function="$gamma_n_n$*$gamma_s$")
+dt         = VariableFunction("dt"       , params, function='$dt_n$*$tscale$')
+cd_kd      = VariableFunction("cd_kd"    , params, function="2*$v0$*$dt$*$cd_ue$")
+alpha_s    = VariableFunction("alpha_s"  , params, function="2./(2*$out_int$/$dt$+1)")
 
-#These are the timescales:
-tau_Dr     = VariableFunction("tau_Dr" , params, function="1/$Dr$")
-tau        = VariableFunction("tau"    , params, function='1/$f$')
-
-k          = VariableFunction("k"      , params, function='$gamma_s$/$tau$')
-b          = VariableFunction("b"      , params, function='$k$/( $v_cell$**2*$gamma_s$**3 )')
-D          = VariableFunction("D"      , params, function='$F_cell$**2/$tau_Dr$')
-Wa         = VariableFunction("Ws"     , params, function="$gamma_s$*$R_cell$**2*$f_a$")
-Wc         = VariableFunction("Wc"     , params, function="$gamma_s$*$R_cell$**2*$f_c$")
-R0         = VariableFunction("R0"     , params, function="$R_cell$*(2*$Ws$+$Wc$)/($Ws$+$Wc$)")
-gamma_c    = VariableFunction("gamma_c", params, function="$gamma_n_n$*$gamma_s$")
-dt         = VariableFunction("dt"     , params, function='$dt_n$*$tscale$')
-cd_kd      = VariableFunction("cd_kd"  , params, function="3*$v_cell$*$dt$*$cd_ue$")
-alpha_s    = VariableFunction("alpha_s", params, function="2./(2*$out_int$/$dt$+1)")
-
-K          = VariableFunction( "K"    , params, function='$k$*$H$+$k_perp_factor$*$k$*($I$-$H$)')
-Gamma      = VariableFunction( "Gamma", params, function='$gamma_s$*$H$+$gamma_perp_factor$*$gamma_s$*($I$-$H$)+$rhv$*$gamma_s$*$Y$')
+K          = VariableFunction( "K"       , params, function='$k$*$H$+$k_perp_factor$*$k$*($I$-$H$)')
+Gamma      = VariableFunction( "Gamma"   , params, function='$gamma_s$*$H$+$gamma_perp_factor$*$gamma_s$*($I$-$H$)+$rhv$*$gamma_s$*$Y$')
 
 if os.path.exists('params.pickle'):
    load_parameters( mysim )
@@ -177,7 +170,6 @@ R = si(R_cell)
 N_width = int( surface_cells_width / ( np.pi*R**2 ) )
 
 Nx, Nz = Nxz_from_N( N_width, si(width)/si(height) )
-
 
 #Make the cells particle container cells:
 cells = prt.ParticleContainer('cells',prt.Sphere0, mysim)
@@ -216,20 +208,14 @@ y_idx = np.argsort(np.argsort( np.array(xs)[:,2]))
 cells.resize( len(xs) )
 cells["x"].set_array(xs)
 cells["r"].set_array(rs)
-cells["v_average"].set_array((0,0,0))
 cells['Fa'].set_array((0,0,0))
 cells['Fb'].set_array((0,0,0))
 cells['Fc'].set_array((0,0,0))
 cells['Ff'].set_array((0,0,0))
-cells["virial_energy"].set_array(0.)
 cells["x_idx"].set_array([int(el) for el in x_idx])
 cells["y_idx"].set_array([int(el) for el in y_idx])
 
 cells.SetContactMatrixDiagonalCmd(visc = Gamma)
-
-#We calculate a (virial) stress-tensor in the contact forces.
-#Its eigen values give the principal stress values
-stress_calculation.AddStressCalculation( mysim, cells, evals = True, evecs = False)
 
 actual_domain = length_x * length_y
 actual_cell_area = np.pi * R**2 * len(xs)
@@ -247,15 +233,16 @@ ghosts2 = pbc2.PeriodicBoundary2D("pbc2D", mysim, cells
 
 df = PersistentRandomForceCommand("PersistentRandomForceCommand", mysim, pc=cells
                                  , K = K, b=b, D_force= D
-                                 , F_active = cells['Fa'] )
+                                 , gamma = gamma_s
+                                 , F_active = cells['Fa']
+                                 , dimensions = (1,0,1) )
 
 #-----------------------------------------------------------------------------------------------------------------------------
 # Cell-cell contact model
-ghosts2.AddContactModels( ContractileRepulsiveMatrix
-                        , Wa = Wa, Wc = Wc
+ghosts2.AddContactModels( LinearOffsetForceMatrix
+                        , k = kc, f = fw
                         , gamma_normal = gamma_c
                         , gamma_tangential = gamma_c
-                        , allow_dewet = False
                         , implicitness = 1. )
 
 ghosts2.AddContactDetectors( MultiGridContactDetector, "CD", mysim
@@ -269,14 +256,9 @@ else:
               , "Internal" : ConjugateGradientSolver_old }
     ConjugateGradient = DefaultConjugateGradientSolver( mysim, tolerance=cg_tol, reset_x=False, F_fric = "Ff"
                                                       , CG_solver = solvers[cg_solver.get_value()])
-    #time integration
-    ForwardEuler_Generic( "integrate_v_cells", mysim, pc = cells, x=cells["x"], dx=cells["v"])
 
-#This prevents that fast velocity oscillations cause strong flicker when looking at v in sparse phases (dilute
-ExponentialMovingAverageCommand("AverageVelocityCommand", mysim("loop_cmds/post_contact_cmds")
-                               , array = cells["v"]
-                               , result = cells["v_average"]
-                               , alpha=alpha_s )
+    #time integration
+    ForwardEuler_Generic( "integrate_v0", mysim, pc = cells, x=cells["x"], dx=cells["v"])
 
 #Add a command that prints some information to the screen at a certain time interval, so we know what the simulation is doing:
 printer_list = [ pp.DefaultProgressPrinter(mysim, sim_time_unit='h') ]
@@ -288,7 +270,7 @@ pp.ProgressIndicator("PrintProgress", mysim, printer, print_interval=5.)
 #-----------------------------------------------------------------------------------------------------------------------------
 
 DataSaveCommand("DataSaveCommand", mysim, executeInterval = out_int )
-wrt_c = cells.VTKWriterCmd(executeInterval = out_int, select_all = True)
+#wrt_c = cells.VTKWriterCmd(executeInterval = out_int, select_all = True)
 
 #print(mysim.print_command_tree())
 mysim.run_until( endtime.get_value() )

@@ -23,6 +23,7 @@ namespace User
         ET_MAKE_MEMBER( R3::Scalar_t,  D,   public);
         ET_MAKE_MEMBER( R3::SymmetricMatrix_t,  K,    public);
         ET_MAKE_MEMBER( R3::Scalar_t,  b,     public);
+        ET_MAKE_MEMBER( R3::Scalar_t,  gamma,     public);
         ET_MAKE_MEMBER( R3::Scalar_t,  dt,      public );
         ET_MAKE_MEMBER( R3::Vector_t,  dim, public);
 
@@ -39,7 +40,9 @@ namespace User
                         , const R3::Vector_t &v
                         , R3::Vector_t &Fa )
         {
-            Fa += dt_ * ( K_ * v - b_*Fa.squaredNorm()*Fa ) + sqrt( 2. * dt_ * D_ ) * generate_frand();
+            R3::Scalar_t sb = gamma_ > 0 ? b_*gamma_*gamma_ *  v.squaredNorm()
+                                         : b_               * Fa.squaredNorm();
+            Fa += dt_ * ( K_ * v - sb * Fa ) + sqrt( 2. * dt_ * D_ ) * generate_frand();
             F += Fa;
         }
     };
@@ -70,8 +73,10 @@ namespace User
             , ET::required );
             addProperty( ftor_.b(), "b"
             , "Restoring coefficient of quadratic term."
-            //TODO: Verify the units of b and force a sanity check on them:
             , ET::required/*, ET::Units::second / ET::Units::meter*/ );
+            addProperty( ftor_.gamma(), "gamma"
+            , "If given, this will use b*gamma^2*v^2 instead of b*Fa^2 for the restorative term. Both are identical for free cells"
+            , ET::optional, 0. );
             addProperty( ftor_.dim(), "dimensions"
             , "Vector with 1 for dimensions where the random process should be simulated. E.g. 2d xy = (1,1,0)"
             , ET::optional, R3::Vector_t(1.,1.,1.) );
