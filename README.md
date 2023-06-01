@@ -3,7 +3,7 @@ This repository contains the scripts for the simulations of self-propelled parti
 In this model, cells experience anisotropic friction and actively move in the direction of a polarization vector that undergoes
 a specific type of diffusion.
 
-Author: [Bart Smeets](https://gitlab.kuleuven.be/u0063694)
+Author: [Bart Smeets](https://github.com/smeetsbart)
 
 Dependencies:
  - Python 3 and higher
