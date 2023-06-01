@@ -116,12 +116,12 @@ H          = Variable("H"      , params, value=(1,0,0,0,0,0)*u('dimensionless'))
 I          = Variable("I"      , params, value=(1,0,1,0,0,1)*u('dimensionless'))
 Y          = Variable("Y"      , params, value=(0,0,1,0,0,0)*u("dimensionless"))
 
-densprop  = Variable( "density"   , params, value = 1.1 * u("dimensionless") )#Cell density
+densprop  = Variable( "density"   , params, value = 1.2 * u("dimensionless") )#Cell density
 gamma_n_n = Variable( 'gamma_n_n' , params, value = 0.0 * u("dimensionless") )#Viscosity
 f_a_n     = Variable( 'f_a_n'     , params, value = 2.5 * u("dimensionless") )#Dimensionless rate of cell-substrate adhesion
-f_c_n     = Variable( 'f_c_n'     , params, value = 0.25 * u("dimensionless") )#Dimensionless rate of cell-cell adhesion
+f_c_n     = Variable( 'f_c_n'     , params, value = 0.0 * u("dimensionless") )#Dimensionless rate of cell-cell adhesion
 Dr_n      = Variable( 'Dr_n'      , params, value = 0.45 * u("dimensionless") )#Rotational diffusivity rate
-f_n       = Variable( "f_n"       , params, value = 2.0 * u('dimensionless'))#Acceleration 'rate' on self-reinforcement of velocity
+f_n       = Variable( "f_n"       , params, value = 4.0 * u('dimensionless'))#Acceleration 'rate' on self-reinforcement of velocity
 
 
 R_cell     = Variable( "R_cell"   , params, value = 10 * u("um"))#Spread out cell size. Sets the units of length
