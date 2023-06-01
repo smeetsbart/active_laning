@@ -112,11 +112,11 @@ Y = Variable("Y"      , params, value=(0,0,1,0,0,0) * u("dimensionless") )
 
 densprop  = Variable( "density"   , params, value = 1.2 * u("dimensionless") )#Cell density
 gamma_n_n = Variable( 'gamma_n_n' , params, value = 0.0 * u("dimensionless") )#Viscosity
-f_n       = Variable( "f_n"       , params, value = 4.5 * u("dimensionless") )#Self-reinforcement rate (1/reinforcement time)
+f_n       = Variable( "f_n"       , params, value = 4.0 * u("dimensionless") )#Self-reinforcement rate (1/reinforcement time)
 w_n       = Variable( "w_n"       , params, value = 0.0 * u("dimensionless") )#Dimensionless adhesion
 k_n       = Variable( "k_n"       , params, value = 2.5 * u("dimensionless") )#Dimensionless repulsion
-height    = Variable( "height"    , params, value = 6.0 * u('mm'))#height of the strip (y direction)
-width     = Variable( "width"     , params, value = 1.0 * u('mm'))#width of the strip (x direction)
+height    = Variable( "height"    , params, value = 10.0 * u('mm'))#height of the strip (y direction)
+width     = Variable( "width"     , params, value = 2.0 * u('mm'))#width of the strip (x direction)
 
 R_cell     = Variable( "R_cell"   , params, value = 10 * u("um"))#Spread out cell size. Sets the units of length
 R_std      = Variable( "R_std"    , params, value = 0.5 * u('um') )#Only to prevent crystal-like effects
